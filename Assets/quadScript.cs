@@ -38,6 +38,7 @@ public class quadScript : MonoBehaviour {
         indices.Add(1);
         mscript.createMeshGeometry(vertices, indices);
 
+        //TODO: pseudokode fra forelesning
         for(int i=0; i < _numSlices; i++)
         {
             foreach(Slice x in _slices){
@@ -95,10 +96,10 @@ public class quadScript : MonoBehaviour {
         for (int y = 0; y < ydim; y++)
             for (int x = 0; x < xdim; x++)
             {
-                float val = pixelval(new Vector2(x, y), xdim, pixels);
-                float v = (val-_minIntensity) / _maxIntensity;      // maps [_minIntensity,_maxIntensity] to [0,1] , i.e.  _minIntensity to black and _maxIntensity to white
+                //float val = pixelval(new Vector2(x, y), xdim, pixels);
+                //float v = (val-_minIntensity) / _maxIntensity;      // maps [_minIntensity,_maxIntensity] to [0,1] , i.e.  _minIntensity to black and _maxIntensity to white
                 float color = greyScale(x, y, z, ydim);
-                if (x==50 && y == 50)
+                if(x ==250 && y == 250)
                 {
                     print(color);
                 }
@@ -110,9 +111,9 @@ public class quadScript : MonoBehaviour {
         GetComponent<Renderer>().material.mainTexture = texture;
     }
     /*
-     * return black if p is closer to center
+     * return black if (x, y, z) is closer to center
      * assumes ydim = xdim
-     * returns ushort between 0..1
+     * returns float representing color, should be between 0..1
      */
     float greyScale(int x, int y, int z, int ydim)
     {
@@ -120,14 +121,8 @@ public class quadScript : MonoBehaviour {
         int dy = Math.Abs(y - ydim / 2);
         int dz = Math.Abs(z - ydim / 2);
         double distance = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-        float color = (float)(distance / ydim / 2.0);
-        if(x==50 && y == 50)
-        {
-            print("distance " + distance);
-            print("x" + dx);
-            print("y" + dy);
-            print("z" + dz);
-        }
+        float color = (float)(distance / ydim * 2.0);
+
         return color;
 
     }
@@ -137,11 +132,11 @@ public class quadScript : MonoBehaviour {
     }
 
     /*
-     * slider to slice through??
+     * when slider changes, update the color with new z value
      */
     public void slicePosSliderChange(float val)
     {
-        int dist = (int)(val * 500);
+        int dist = (int)(val * 512);
         setTexture(_slices[0], dist);
     }
 
