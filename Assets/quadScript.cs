@@ -15,6 +15,7 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
+    int dimension = 510;
     //int _iso;
 
     // Use this for initialization
@@ -28,17 +29,7 @@ public class quadScript : MonoBehaviour {
         _slices = processSlices(dicomfilepath);     // loads slices from the folder above
         setTexture(_slices[0], 0);                     // shows the first slice
 
-        //  gets the mesh object and uses it to create a diagonal line
-        meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>();
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> indices = new List<int>();
-        vertices.Add(new Vector3(-0.5f,-0.5f,0));
-        vertices.Add(new Vector3(0.5f,0.5f,0));
-        indices.Add(0);
-        indices.Add(1);
-        mscript.createMeshGeometry(vertices, indices);
-
-        //TODO: pseudokode fra forelesning
+        //TODO: pseudokode fra forelesning????
         for(int i=0; i < _numSlices; i++)
         {
             foreach(Slice x in _slices){
@@ -46,6 +37,89 @@ public class quadScript : MonoBehaviour {
         }
 
         }
+
+        //start marching squares to create circle
+        MarchingSquares();
+
+    }
+    /**
+     * run across all pixels, generate line segments and draw them
+     */
+     void MarchingSquares()
+    {
+        //  gets the mesh object and uses it to create a diagonal line
+        meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>(); 
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> indices = new List<int>();
+        //assume grid of 512 and scale down later
+        //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
+
+        for (int i=0; i< dimension; i++)
+        {
+            for(int j=0; j<dimension; j++)
+            {
+
+                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.3f);
+                if(line != null)
+                {
+                    addVertice(line.Value.Item1, line.Value.Item2, vertices, indices);
+                }
+            }
+        }
+        mscript.createMeshGeometry(vertices, indices);
+
+    }
+    /**
+     * returns start and stop coordinates for a line
+     */
+    private Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso)
+    {
+        //check all adjacent pixels
+        int x = (int)currentGrid.x;
+        int y = (int)currentGrid.y;
+        int z = 256;
+        float sw = PixelValue(x,y, z, 512);
+        float se = PixelValue(x+1, y, z, 512);
+        float nw = PixelValue(x, y+1, z, 512);
+        float ne = PixelValue(x+1, y+1, z, 512);
+        if(x==250 && y == 250)
+        {
+            print("a");
+        }
+        if (nw>=iso && ne>=iso && sw<iso && se < iso)
+        {
+            print("draw straight");
+            return (new Vector2(x + 0.5f, y), new Vector2(x - 0.5f, y));
+        }
+        return null;
+
+
+
+    }
+
+    int _IndexCounter = 0;
+    /*
+     * adds a line at given coordinates by updating the lists vertices, indices
+     * scales line down to match the pixels (pixelsize is 512x512)
+     */
+    void addVertice(Vector2 start, Vector2 stop, List<Vector3> vertices, List<int> indices)
+    {
+        start = scaleToPixels(start);
+        stop = scaleToPixels(stop);
+        vertices.Add(new Vector3(start.x, start.y, 0));
+        vertices.Add(new Vector3(stop.x, stop.y, 0));
+        indices.Add(_IndexCounter * 2);
+        indices.Add(_IndexCounter * 2 + 1);
+        _IndexCounter += 1;
+    }
+    /**
+     * try to scale the mesh coordinate to the pixel coordinates
+     */
+    Vector2 scaleToPixels(Vector2 coor)
+    {
+        coor.x = (coor.x / 50)-5f;
+        coor.y = (coor.y / 50)-5f;
+        return coor;
     }
 
     Slice[] processSlices(string dicomfilepath)
@@ -98,8 +172,8 @@ public class quadScript : MonoBehaviour {
             {
                 //float val = pixelval(new Vector2(x, y), xdim, pixels);
                 //float v = (val-_minIntensity) / _maxIntensity;      // maps [_minIntensity,_maxIntensity] to [0,1] , i.e.  _minIntensity to black and _maxIntensity to white
-                float color = greyScale(x, y, z, ydim);
-                if(x ==250 && y == 250)
+                float color = PixelValue(x, y, z, ydim);
+                if(x==200 && y == 200)
                 {
                     print(color);
                 }
@@ -115,7 +189,7 @@ public class quadScript : MonoBehaviour {
      * assumes ydim = xdim
      * returns float representing color, should be between 0..1
      */
-    float greyScale(int x, int y, int z, int ydim)
+    float PixelValue(int x, int y, int z, int ydim)
     {
         int dx = Math.Abs(x - ydim / 2);
         int dy = Math.Abs(y - ydim / 2);
@@ -126,6 +200,9 @@ public class quadScript : MonoBehaviour {
         return color;
 
     }
+    /**
+     * not used
+     */
     ushort pixelval(Vector2 p, int xdim, ushort[] pixels)
     {
         return pixels[(int)p.x + (int)p.y * xdim];
