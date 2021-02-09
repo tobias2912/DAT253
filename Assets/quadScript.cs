@@ -58,7 +58,6 @@ public class quadScript : MonoBehaviour {
         {
             for(int j=0; j<dimension; j++)
             {
-
                 (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.3f);
                 if(line != null)
                 {
@@ -69,6 +68,7 @@ public class quadScript : MonoBehaviour {
         mscript.createMeshGeometry(vertices, indices);
 
     }
+
     /**
      * returns start and stop coordinates for a line
      */
@@ -78,21 +78,74 @@ public class quadScript : MonoBehaviour {
         int x = (int)currentGrid.x;
         int y = (int)currentGrid.y;
         int z = 256;
-        float sw = PixelValue(x,y, z, 512);
-        float se = PixelValue(x+1, y, z, 512);
-        float nw = PixelValue(x, y+1, z, 512);
-        float ne = PixelValue(x+1, y+1, z, 512);
-        if(x==250 && y == 250)
-        {
-            print("a");
-        }
-        if (nw>=iso && ne>=iso && sw<iso && se < iso)
-        {
-            print("draw straight");
-            return (new Vector2(x + 0.5f, y), new Vector2(x - 0.5f, y));
-        }
-        return null;
+        float sw = PixelValue(x, y, z, 512);
+        float se = PixelValue(x + 1, y, z, 512);
+        float nw = PixelValue(x, y + 1, z, 512);
+        float ne = PixelValue(x + 1, y + 1, z, 512);
+        float r = 0.5f;
 
+        // 1
+        if (nw >= iso && ne >= iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x, y - r), new Vector2(x - r, y));
+        }
+        // 2
+        if (nw >= iso && ne >= iso && sw >= iso && se < iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x, y - r));
+        }
+        // 3
+        if (nw >= iso && ne >= iso && sw < iso && se < iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x - r, y));
+        }
+        // 4
+        if (nw < iso && ne >= iso && sw >= iso && se >= iso)
+        {
+            return (new Vector2(x - r, y), new Vector2(x, y + r));
+        }
+        // 5
+        if (nw < iso && ne >= iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x, y-r), new Vector2(x, y+r));
+        }
+        // 7
+        if (nw < iso && ne >= iso && sw < iso && se < iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x, y + r));
+        }
+        // 8
+        if (nw >= iso && ne < iso && sw >= iso && se >= iso)
+        {
+            return (new Vector2(x, y+r), new Vector2(x+r, y));
+        }
+        // 10
+        if (nw >= iso && ne < iso && sw >= iso && se < iso)
+        {
+            return (new Vector2(x, y - r), new Vector2(x, y + r));
+        }
+        // 11
+        if (nw >= iso && ne < iso && sw < iso && se < iso)
+        {
+            return (new Vector2(x, y+r), new Vector2(x-r, y));
+        }
+        // 12
+        if (nw < iso && ne < iso && sw >= iso && se >= iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x - r, y));
+        }
+        // 13
+        if (nw < iso && ne < iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x, y-r), new Vector2(x+r, y));
+        }
+        // 14
+        if (nw >= iso && ne >= iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x - r, y), new Vector2(x, y - r));
+        }
+
+        return null;
 
 
     }
@@ -198,7 +251,6 @@ public class quadScript : MonoBehaviour {
         float color = (float)(distance / ydim * 2.0);
 
         return color;
-
     }
     /**
      * not used
