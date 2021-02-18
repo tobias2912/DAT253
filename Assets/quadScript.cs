@@ -64,8 +64,6 @@ public class quadScript : MonoBehaviour {
 
     void DoCube(float iso, int x, int y, int z)
     {
-        Vector3 coor = new Vector3(x, y, z);
-        float p0 = PixelValue(x, y, z, 512);
         Vector3 v0 = new Vector3(x, y, z);
         Vector3 v1 = new Vector3(x + 1, y, z);
         Vector3 v2 = new Vector3(x, y + 1, z);
@@ -74,20 +72,22 @@ public class quadScript : MonoBehaviour {
         Vector3 v5 = new Vector3(x + 1, y, z+1);
         Vector3 v6 = new Vector3(x, y + 1, z+1);
         Vector3 v7 = new Vector3(x + 1, y + 1, z+1);
-        DoTetra(iso, v4,v6,p0,v7, coor);
-        DoTetra(iso, v6,p0,v7,v2, );
-        DoTetra(iso, p0,v7,v2,v3);
-        DoTetra(iso, v4,v5,v7,p0);
-        DoTetra(iso, v1,v7,p0,v3);
-        DoTetra(iso, p0,v5,v7,v1);
+        DoTetra(iso, v4,v6,v0,v7);
+        DoTetra(iso, v6,v0,v7,v2);
+        DoTetra(iso, v0,v7,v2,v3);
+        DoTetra(iso, v4,v5,v7,v0);
+        DoTetra(iso, v1,v7,v0,v3);
+        DoTetra(iso, v0,v5,v7,v1);
     }
 
-    void DoTetra(float iso, float p1, float p2, float p3, float p4, Vector3 coor)
+    void DoTetra(float iso, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
-        float p1 = PixelValue(x + 1, y, z, 512);
+        float p1 = PixelValue((int)v1.x, (int)v1.y,(int) v1.z, dimension);
+        float p2 = PixelValue((int)v2.x,(int) v2.y,(int) v2.z, dimension);
+        float p3 = PixelValue((int)v3.x,(int) v3.y,(int) v3.z, dimension);
+        float p4 = PixelValue((int)v4.x, (int)v4.y,(int) v4.z, dimension);
 
         String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
-        Vector3 p14 = coor + new Vector3(0.25f, 0.25f, 0.5f);
         switch (isoString)
         {
             case "0000" or "1111":
