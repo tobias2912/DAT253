@@ -87,19 +87,39 @@ public class quadScript : MonoBehaviour {
         float p3 = PixelValue((int)v3.x,(int) v3.y,(int) v3.z, dimension);
         float p4 = PixelValue((int)v4.x, (int)v4.y,(int) v4.z, dimension);
 
+        Vector3 p12 = (v1 + v2) / 2;
+        Vector3 p13 = (v1 + v3) / 2;
+        Vector3 p14 = (v1 + v3) / 2;
+        Vector3 p23 = (v2 + v3) / 2;
+        Vector3 p24 = (v2 + v4) / 2;
+        Vector3 p34 = (v3 + v4) / 2;
+
         String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
         switch (isoString)
         {
-            case "0000" or "1111":
+            case "0000": case "1111":
                 //do nothing
-            case "1110" or "0001":
+            case "1110": case "0001":
                 MakeTriangle(p14, p24, p34);
-            case "1101" or "0010":
-            case "1011" or "0100":
-            case "0111" or "1000":
-            case "1100" or "0011":
-                MakeQuad()
-            case "1001" or "0110":
+                break;
+            case "1101": case "0010":
+                MakeTriangle(p13, p34, p23);
+                break;
+            case "1011": case "0100":
+                MakeTriangle(p12, p23, p24);
+                break;
+            case "0111": case "1000":
+                MakeTriangle(p12, p13, p14);
+                break;
+            case "1100": case "0011":
+                MakeQuad(p13, p14, p24, p23);
+                break;
+            case "1010": case "0101":
+                MakeQuad(p12, p23, p34, p13);
+                break;
+            case "1001": case "0110":
+                MakeQuad(p12, p13, p34, p24);
+                break;
 
             default:
                 throw new Exception("no cases");
@@ -121,7 +141,8 @@ public class quadScript : MonoBehaviour {
      */
     void MakeQuad(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
     {
-        MakeTriangle()
+        MakeTriangle(p1, p3, p2);
+        MakeTriangle(p1, p3, p4);
     }
     /**
      * returns start and stop coordinates for a line
