@@ -58,7 +58,7 @@ public class quadScript : MonoBehaviour {
         {
             for(int j=0; j<dimension; j++)
             {
-                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.3f);
+                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.8f);
                 if(line != null)
                 {
                     addVertice(line.Value.Item1, line.Value.Item2, vertices, indices);
