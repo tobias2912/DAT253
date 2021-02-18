@@ -15,8 +15,10 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
-    int dimension = 510;
+    int dimension = 512;
     //int _iso;
+    List<Vector3> vertices = new List<Vector3>();
+    List<int> indices = new List<int>();
 
     // Use this for initialization
     void Start () {
@@ -29,23 +31,15 @@ public class quadScript : MonoBehaviour {
         _slices = processSlices(dicomfilepath);     // loads slices from the folder above
         setTexture(_slices[0], 0);                     // shows the first slice
 
-        //TODO: pseudokode fra forelesning????
-        for(int i=0; i < _numSlices; i++)
-        {
-            foreach(Slice x in _slices){
-                break;
-        }
-
-        }
-
         //start marching squares to create circle
-        MarchingSquares();
+        MarchingCubes();
 
     }
+
     /**
      * run across all pixels, generate line segments and draw them
      */
-     void MarchingSquares()
+     void MarchingCubes()
     {
         //  gets the mesh object and uses it to create a diagonal line
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>(); 
@@ -54,14 +48,13 @@ public class quadScript : MonoBehaviour {
         //assume grid of 512 and scale down later
         //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
 
-        for (int i=0; i< dimension; i++)
+        for (int x=0; x< dimension; x++)
         {
-            for(int j=0; j<dimension; j++)
+            for(int y=0; y<dimension; y++)
             {
-                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.8f);
-                if(line != null)
+                for (int z = 0; z < dimension; z++)
                 {
-                    addVertice(line.Value.Item1, line.Value.Item2, vertices, indices);
+                    DoCube(0.8f, x, y, z);
                 }
             }
         }
@@ -69,10 +62,71 @@ public class quadScript : MonoBehaviour {
 
     }
 
+    void DoCube(float iso, int x, int y, int z)
+    {
+        Vector3 coor = new Vector3(x, y, z);
+        float p0 = PixelValue(x, y, z, 512);
+        Vector3 v0 = new Vector3(x, y, z);
+        Vector3 v1 = new Vector3(x + 1, y, z);
+        Vector3 v2 = new Vector3(x, y + 1, z);
+        Vector3 v3 = new Vector3(x + 1, y + 1, z);
+        Vector3 v4 = new Vector3(x, y, z+1);
+        Vector3 v5 = new Vector3(x + 1, y, z+1);
+        Vector3 v6 = new Vector3(x, y + 1, z+1);
+        Vector3 v7 = new Vector3(x + 1, y + 1, z+1);
+        DoTetra(iso, v4,v6,p0,v7, coor);
+        DoTetra(iso, v6,p0,v7,v2, );
+        DoTetra(iso, p0,v7,v2,v3);
+        DoTetra(iso, v4,v5,v7,p0);
+        DoTetra(iso, v1,v7,p0,v3);
+        DoTetra(iso, p0,v5,v7,v1);
+    }
+
+    void DoTetra(float iso, float p1, float p2, float p3, float p4, Vector3 coor)
+    {
+        float p1 = PixelValue(x + 1, y, z, 512);
+
+        String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
+        Vector3 p14 = coor + new Vector3(0.25f, 0.25f, 0.5f);
+        switch (isoString)
+        {
+            case "0000" or "1111":
+                //do nothing
+            case "1110" or "0001":
+                MakeTriangle(p14, p24, p34);
+            case "1101" or "0010":
+            case "1011" or "0100":
+            case "0111" or "1000":
+            case "1100" or "0011":
+                MakeQuad()
+            case "1001" or "0110":
+
+            default:
+                throw new Exception("no cases");
+        }
+    }
+
+    void MakeTriangle(Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        vertices.Add(p1);
+        vertices.Add(p2);
+        vertices.Add(p3);
+        indices.Add(_IndexCounter);
+        indices.Add(_IndexCounter+1);
+        indices.Add(_IndexCounter+2);
+        _IndexCounter += 3;
+    }
+    /**
+     * p1 og p2 er diagonal
+     */
+    void MakeQuad(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+    {
+        MakeTriangle()
+    }
     /**
      * returns start and stop coordinates for a line
      */
-    private Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso)
+    Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso)
     {
         //check all adjacent pixels
         int x = (int)currentGrid.x;
