@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -10,6 +11,7 @@ public class meshScript : MonoBehaviour
 
     void Start()
     {
+        System.Globalization.CultureInfo dotasDecimalSeparator = new System.Globalization.CultureInfo("en-US");
         // programatically create meshfilter and meshrenderer and add to gameobject this script is attached to.
         GameObject go = gameObject; // GameObject.Find("GameObjectDp");
         MeshFilter meshFilter = (MeshFilter)go.AddComponent(typeof(MeshFilter));
@@ -35,16 +37,16 @@ public class meshScript : MonoBehaviour
         //mesh.Optimize();  //https://docs.unity3d.com/ScriptReference/Mesh.Optimize.html
         mesh.RecalculateBounds();
         //mesh.RecalculateNormals();
+        mesh.indexFormat = IndexFormat.UInt32;
     }
 
     // the code below is for saving the mesh to file in .obj format (see https://en.wikipedia.org/wiki/Wavefront_.obj_file) which can be loaded by e.g. meshlab
     public void MeshToFile(string filename)
     {
+        System.Globalization.CultureInfo dotasDecimalSeparator = new System.Globalization.CultureInfo("en-US");
         MeshFilter mf = GetComponent<MeshFilter>();
         using (StreamWriter sw = new StreamWriter(filename))
             sw.Write(MeshToString(mf));
-        System.Globalization.CultureInfo dotasDecimalSeparator = new System.Globalization.CultureInfo("en-US");
-
 
         print("Mesh saved to file: " + filename);
     }

@@ -15,7 +15,8 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
-    int dimension =50;
+    int dimension = 100;
+    int _IndexCounter = 0;
     //int _iso;
     List<Vector3> vertices = new List<Vector3>();
     List<int> indices = new List<int>();
@@ -32,20 +33,18 @@ public class quadScript : MonoBehaviour {
         setTexture(_slices[0], 0);                     // shows the first slice
 
         //start marching squares to create circle
-        MarchingCubes();
+        MarchingTetraHeaders();
 
     }
 
     /**
      * run across all pixels, generate line segments and draw them
      */
-     void MarchingCubes()
+     void MarchingTetraHeaders()
     {
-        print("marching cubes");
+        print("Marching Tetraheaders");
         //  gets the mesh object and uses it to create a diagonal line
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>(); 
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> indices = new List<int>();
         //assume grid of 512 and scale down later
         //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
         for (int x=0; x< dimension; x++)
@@ -60,7 +59,9 @@ public class quadScript : MonoBehaviour {
             }
         }
         mscript.createMeshGeometry(vertices, indices);
+        mscript.MeshToFile("D:/mesh/mesh.obj");
 
+        print("done");
     }
 
     void DoCube(float iso, int x, int y, int z)
@@ -118,7 +119,7 @@ public class quadScript : MonoBehaviour {
                 MakeQuad(p13, p14, p24, p23);
                 break;
             case "1010": case "0101":
-                MakeQuad(p12, p23, p34, p13);
+                MakeQuad(p12, p23, p34, p14);
                 break;
             case "1001": case "0110":
                 MakeQuad(p12, p13, p34, p24);
@@ -228,12 +229,11 @@ public class quadScript : MonoBehaviour {
 
     }
 
-    int _IndexCounter = 0;
     /*
      * adds a line at given coordinates by updating the lists vertices, indices
      * scales line down to match the pixels (pixelsize is 512x512)
      */
-    void addVertice(Vector2 start, Vector2 stop, List<Vector3> vertices, List<int> indices)
+    void addVertice(Vector2 start, Vector2 stop)
     {
         start = scaleToPixels(start);
         stop = scaleToPixels(stop);
