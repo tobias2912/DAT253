@@ -6,6 +6,7 @@ using System.IO;
 
 public class quadScript : MonoBehaviour {
 
+
     // Dicom har et "levende" dictionary som leses fra xml ved initDicom
     // slices må sorteres, og det basert på en tag, men at pixeldata lesing er en separat operasjon, derfor har vi nullpeker til pixeldata
     // dicomfile lagres slik at fil ikke må leses enda en gang når pixeldata hentes
@@ -23,7 +24,9 @@ public class quadScript : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-       
+
+        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+
         Slice.initDicom();
 
         string dicomfilepath = Application.dataPath + @"\..\dicomdata\"; // Application.dataPath is in the assets folder, but these files are "managed", so we go one level up
@@ -59,7 +62,8 @@ public class quadScript : MonoBehaviour {
             }
         }
         mscript.createMeshGeometry(vertices, indices);
-        mscript.MeshToFile("D:/mesh/mesh.obj");
+        mscript.toFile("D:/mesh/mesh.obj", vertices, indices); // endre path
+
 
         print("done");
     }
