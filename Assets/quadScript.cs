@@ -41,6 +41,7 @@ public class quadScript : MonoBehaviour {
      */
      void MarchingCubes()
     {
+        print("marching cubes");
         //  gets the mesh object and uses it to create a diagonal line
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>(); 
         List<Vector3> vertices = new List<Vector3>();
@@ -50,6 +51,7 @@ public class quadScript : MonoBehaviour {
 
         for (int x=0; x< dimension; x++)
         {
+            print("x dim: " + x.ToString());
             for(int y=0; y<dimension; y++)
             {
                 for (int z = 0; z < dimension; z++)
@@ -99,6 +101,7 @@ public class quadScript : MonoBehaviour {
         {
             case "0000": case "1111":
                 //do nothing
+                break;
             case "1110": case "0001":
                 MakeTriangle(p14, p24, p34);
                 break;
