@@ -15,7 +15,7 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
-    int dimension = 512;
+    int dimension =50;
     //int _iso;
     List<Vector3> vertices = new List<Vector3>();
     List<int> indices = new List<int>();
@@ -48,7 +48,6 @@ public class quadScript : MonoBehaviour {
         List<int> indices = new List<int>();
         //assume grid of 512 and scale down later
         //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
-
         for (int x=0; x< dimension; x++)
         {
             print("x dim: " + x.ToString());
@@ -91,12 +90,13 @@ public class quadScript : MonoBehaviour {
 
         Vector3 p12 = (v1 + v2) / 2;
         Vector3 p13 = (v1 + v3) / 2;
-        Vector3 p14 = (v1 + v3) / 2;
+        Vector3 p14 = (v1 + v4) / 2;
         Vector3 p23 = (v2 + v3) / 2;
         Vector3 p24 = (v2 + v4) / 2;
         Vector3 p34 = (v3 + v4) / 2;
 
-        String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
+        String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + 
+            (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
         switch (isoString)
         {
             case "0000": case "1111":
