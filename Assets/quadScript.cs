@@ -136,9 +136,10 @@ public class quadScript : MonoBehaviour {
 
     void MakeTriangle(Vector3 p1, Vector3 p2, Vector3 p3)
     {
-        vertices.Add(p1);
-        vertices.Add(p2);
-        vertices.Add(p3);
+        
+        vertices.Add(scaleToPixels(p1));
+        vertices.Add(scaleToPixels(p2));
+        vertices.Add(scaleToPixels(p3));
         indices.Add(_IndexCounter);
         indices.Add(_IndexCounter+1);
         indices.Add(_IndexCounter+2);
@@ -233,27 +234,11 @@ public class quadScript : MonoBehaviour {
 
     }
 
-    /*
-     * adds a line at given coordinates by updating the lists vertices, indices
-     * scales line down to match the pixels (pixelsize is 512x512)
-     */
-    void addVertice(Vector2 start, Vector2 stop)
-    {
-        start = scaleToPixels(start);
-        stop = scaleToPixels(stop);
-        vertices.Add(new Vector3(start.x, start.y, 0));
-        vertices.Add(new Vector3(stop.x, stop.y, 0));
-        indices.Add(_IndexCounter * 2);
-        indices.Add(_IndexCounter * 2 + 1);
-        _IndexCounter += 1;
-    }
-    /**
-     * try to scale the mesh coordinate to the pixel coordinates
-     */
-    Vector2 scaleToPixels(Vector2 coor)
+    Vector3 scaleToPixels(Vector3 coor)
     {
         coor.x = (coor.x / 50)-5f;
         coor.y = (coor.y / 50)-5f;
+        coor.z = (coor.z / 50)-5f;
         return coor;
     }
 
