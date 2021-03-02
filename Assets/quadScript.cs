@@ -16,7 +16,7 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
-    int dimension = 100;
+    int dimension = 50;
     int _IndexCounter = 0;
     //int _iso;
     List<Vector3> vertices = new List<Vector3>();
@@ -52,7 +52,6 @@ public class quadScript : MonoBehaviour {
         //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
         for (int x=0; x< dimension; x++)
         {
-            print("x dim: " + x.ToString());
             for(int y=0; y<dimension; y++)
             {
                 for (int z = 0; z < dimension; z++)
@@ -62,7 +61,7 @@ public class quadScript : MonoBehaviour {
             }
         }
         mscript.createMeshGeometry(vertices, indices);
-        mscript.toFile("D:/mesh/mesh.obj", vertices, indices); // endre path
+        mscript.toFile("C:/mesh/mesh.obj", vertices, indices); // endre path
 
 
         print("done");
@@ -86,6 +85,14 @@ public class quadScript : MonoBehaviour {
         DoTetra(iso, v0,v5,v7,v1);
     }
 
+    Vector3 interpolate(Vector3 v1, Vector3 v2, float p1, float p2, float iso)
+    {
+            float x = ((iso - p1) / (p2 - p1));
+            Vector3 v= v1 + x * (v2 - v1);
+            return v;
+
+    }
+
     void DoTetra(float iso, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
         float p1 = PixelValue((int)v1.x, (int)v1.y,(int) v1.z, dimension);
@@ -93,12 +100,12 @@ public class quadScript : MonoBehaviour {
         float p3 = PixelValue((int)v3.x,(int) v3.y,(int) v3.z, dimension);
         float p4 = PixelValue((int)v4.x, (int)v4.y,(int) v4.z, dimension);
 
-        Vector3 p12 = (v1 + v2) / 2;
-        Vector3 p13 = (v1 + v3) / 2;
-        Vector3 p14 = (v1 + v4) / 2;
-        Vector3 p23 = (v2 + v3) / 2;
-        Vector3 p24 = (v2 + v4) / 2;
-        Vector3 p34 = (v3 + v4) / 2;
+        Vector3 p12 = interpolate(v1, v2, p1, p2, iso);
+        Vector3 p13 = interpolate(v1, v3, p1, p3, iso);
+        Vector3 p14 = interpolate(v1, v4, p1, p4, iso);
+        Vector3 p23 = interpolate(v2, v3, p2, p3, iso);
+        Vector3 p24 = interpolate(v2, v4, p2, p4, iso);
+        Vector3 p34 = interpolate(v3, v4, p3, p4, iso);
 
         String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + 
             (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
@@ -152,86 +159,6 @@ public class quadScript : MonoBehaviour {
     {
         MakeTriangle(p1, p3, p2);
         MakeTriangle(p1, p3, p4);
-    }
-    /**
-     * returns start and stop coordinates for a line
-     */
-    Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso)
-    {
-        //check all adjacent pixels
-        int x = (int)currentGrid.x;
-        int y = (int)currentGrid.y;
-        int z = 256;
-        float sw = PixelValue(x, y, z, 512);
-        float se = PixelValue(x + 1, y, z, 512);
-        float nw = PixelValue(x, y + 1, z, 512);
-        float ne = PixelValue(x + 1, y + 1, z, 512);
-        float r = 0.5f;
-
-        // 1
-        if (nw >= iso && ne >= iso && sw < iso && se >= iso)
-        {
-            return (new Vector2(x, y - r), new Vector2(x - r, y));
-        }
-        // 2
-        if (nw >= iso && ne >= iso && sw >= iso && se < iso)
-        {
-            return (new Vector2(x + r, y), new Vector2(x, y - r));
-        }
-        // 3
-        if (nw >= iso && ne >= iso && sw < iso && se < iso)
-        {
-            return (new Vector2(x + r, y), new Vector2(x - r, y));
-        }
-        // 4
-        if (nw < iso && ne >= iso && sw >= iso && se >= iso)
-        {
-            return (new Vector2(x - r, y), new Vector2(x, y + r));
-        }
-        // 5
-        if (nw < iso && ne >= iso && sw < iso && se >= iso)
-        {
-            return (new Vector2(x, y-r), new Vector2(x, y+r));
-        }
-        // 7
-        if (nw < iso && ne >= iso && sw < iso && se < iso)
-        {
-            return (new Vector2(x + r, y), new Vector2(x, y + r));
-        }
-        // 8
-        if (nw >= iso && ne < iso && sw >= iso && se >= iso)
-        {
-            return (new Vector2(x, y+r), new Vector2(x+r, y));
-        }
-        // 10
-        if (nw >= iso && ne < iso && sw >= iso && se < iso)
-        {
-            return (new Vector2(x, y - r), new Vector2(x, y + r));
-        }
-        // 11
-        if (nw >= iso && ne < iso && sw < iso && se < iso)
-        {
-            return (new Vector2(x, y+r), new Vector2(x-r, y));
-        }
-        // 12
-        if (nw < iso && ne < iso && sw >= iso && se >= iso)
-        {
-            return (new Vector2(x + r, y), new Vector2(x - r, y));
-        }
-        // 13
-        if (nw < iso && ne < iso && sw < iso && se >= iso)
-        {
-            return (new Vector2(x, y-r), new Vector2(x+r, y));
-        }
-        // 14
-        if (nw >= iso && ne >= iso && sw < iso && se >= iso)
-        {
-            return (new Vector2(x - r, y), new Vector2(x, y - r));
-        }
-
-        return null;
-
-
     }
 
     Vector3 scaleToPixels(Vector3 coor)
@@ -318,13 +245,6 @@ public class quadScript : MonoBehaviour {
         float color = (float)(distance / ydim * 2.0);
 
         return color;
-    }
-    /**
-     * not used
-     */
-    ushort pixelval(Vector2 p, int xdim, ushort[] pixels)
-    {
-        return pixels[(int)p.x + (int)p.y * xdim];
     }
 
     /*
