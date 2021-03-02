@@ -20,6 +20,7 @@ public class meshScript : MonoBehaviour
  
     public void createMeshGeometry(List<Vector3> vertices, List<int> indices)
     {
+
         Mesh mesh = GetComponent<MeshFilter>().mesh;
         mesh.Clear();
   
@@ -28,9 +29,9 @@ public class meshScript : MonoBehaviour
      
         // https://docs.unity3d.com/ScriptReference/MeshTopology.html
         // mesh.SetIndices(Triangles.ToArray(), MeshTopology.Points, 0);
-        //mesh.SetIndices(indices.ToArray(), MeshTopology.Lines, 0);
+        mesh.SetIndices(indices.ToArray(), MeshTopology.Lines, 0);
         // mesh.SetIndices(indices.ToArray(), MeshTopology.LineStrip, 0); 
-        mesh.SetIndices(indices.ToArray(), MeshTopology.Triangles, 0);
+        //mesh.SetIndices(indices.ToArray(), MeshTopology.Triangles, 0);
 
         // mesh.MarkDynamic();  // https://docs.unity3d.com/ScriptReference/Mesh.MarkDynamic.html
         // For iterative mesh additions without reloading the old mesh data   https://docs.unity3d.com/ScriptReference/Mesh.CombineMeshes.html

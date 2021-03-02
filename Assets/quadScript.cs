@@ -16,7 +16,7 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
-    int dimension = 50;
+    int dimension = 512;
     int _IndexCounter = 0;
     //int _iso;
     List<Vector3> vertices = new List<Vector3>();
@@ -33,17 +33,52 @@ public class quadScript : MonoBehaviour {
    
 
         _slices = processSlices(dicomfilepath);     // loads slices from the folder above
-        setTexture(_slices[0], 0);                     // shows the first slice
+        setTexture(_slices[0]);                     // shows the first slice
 
         //start marching squares to create circle
-        MarchingTetraHeaders();
+        MarchingSquares();
 
+    }
+    /**
+ * run across all pixels, generate line segments and draw them
+ */
+    void MarchingSquares()
+    {
+        //  gets the mesh object and uses it to create a diagonal line
+        meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>();
+        //assume grid of 512 and scale down later
+        //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
+
+        for (int i = 0; i < dimension; i++)
+        {
+            for (int j = 0; j < dimension; j++)
+            {
+                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.8f);
+                if (line != null)
+                {
+                    addVertice(line.Value.Item1, line.Value.Item2 );
+                }
+            }
+        }
+        mscript.createMeshGeometry(vertices, indices);
+
+    }
+
+    void addVertice(Vector2 start, Vector2 stop)
+    {
+        start = scaleToPixels(start);
+        stop = scaleToPixels(stop);
+        vertices.Add(new Vector3(start.x, start.y, 0));
+        vertices.Add(new Vector3(stop.x, stop.y, 0));
+        indices.Add(_IndexCounter * 2);
+        indices.Add(_IndexCounter * 2 + 1);
+        _IndexCounter += 1;
     }
 
     /**
      * run across all pixels, generate line segments and draw them
      */
-     void MarchingTetraHeaders()
+    void MarchingTetraHeaders()
     {
         print("Marching Tetraheaders");
         //  gets the mesh object and uses it to create a diagonal line
@@ -205,7 +240,7 @@ public class quadScript : MonoBehaviour {
     }
 
     //setSlices
-    void setTexture(Slice slice, int z)
+    void setTexture(Slice slice)
     {
         int xdim = slice.sliceInfo.Rows;
         int ydim = slice.sliceInfo.Columns;
@@ -217,19 +252,19 @@ public class quadScript : MonoBehaviour {
         for (int y = 0; y < ydim; y++)
             for (int x = 0; x < xdim; x++)
             {
-                //float val = pixelval(new Vector2(x, y), xdim, pixels);
-                //float v = (val-_minIntensity) / _maxIntensity;      // maps [_minIntensity,_maxIntensity] to [0,1] , i.e.  _minIntensity to black and _maxIntensity to white
-                float color = PixelValue(x, y, z, ydim);
-                if(x==200 && y == 200)
-                {
-                    print(color);
-                }
-                texture.SetPixel(x, y, new UnityEngine.Color(color, color, color));
+                float val = pixelval(new Vector2(x, y), xdim, pixels);
+                float v = (val-_minIntensity) / _maxIntensity;      // maps [_minIntensity,_maxIntensity] to [0,1] , i.e.  _minIntensity to black and _maxIntensity to white
+                
+                texture.SetPixel(x, y, new UnityEngine.Color(v,v,v));
             }
 
         texture.filterMode = FilterMode.Point;  // nearest neigbor interpolation is used.  (alternative is FilterMode.Bilinear)
         texture.Apply();  // Apply all SetPixel calls
         GetComponent<Renderer>().material.mainTexture = texture;
+    }
+    ushort pixelval(Vector2 p, int xdim, ushort[] pixels)
+    {
+        return pixels[(int)p.x + (int)p.y * xdim];
     }
     /*
      * return black if (x, y, z) is closer to center
@@ -247,13 +282,89 @@ public class quadScript : MonoBehaviour {
         return color;
     }
 
+    private Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso)
+    {
+        //check all adjacent pixels
+        int x = (int)currentGrid.x;
+        int y = (int)currentGrid.y;
+        int z = 256;
+        float sw = PixelValue(x, y, z, 512);
+        float se = PixelValue(x + 1, y, z, 512);
+        float nw = PixelValue(x, y + 1, z, 512);
+        float ne = PixelValue(x + 1, y + 1, z, 512);
+        float r = 0.5f;
+
+        // 1
+        if (nw >= iso && ne >= iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x, y - r), new Vector2(x - r, y));
+        }
+        // 2
+        if (nw >= iso && ne >= iso && sw >= iso && se < iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x, y - r));
+        }
+        // 3
+        if (nw >= iso && ne >= iso && sw < iso && se < iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x - r, y));
+        }
+        // 4
+        if (nw < iso && ne >= iso && sw >= iso && se >= iso)
+        {
+            return (new Vector2(x - r, y), new Vector2(x, y + r));
+        }
+        // 5
+        if (nw < iso && ne >= iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x, y - r), new Vector2(x, y + r));
+        }
+        // 7
+        if (nw < iso && ne >= iso && sw < iso && se < iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x, y + r));
+        }
+        // 8
+        if (nw >= iso && ne < iso && sw >= iso && se >= iso)
+        {
+            return (new Vector2(x, y + r), new Vector2(x + r, y));
+        }
+        // 10
+        if (nw >= iso && ne < iso && sw >= iso && se < iso)
+        {
+            return (new Vector2(x, y - r), new Vector2(x, y + r));
+        }
+        // 11
+        if (nw >= iso && ne < iso && sw < iso && se < iso)
+        {
+            return (new Vector2(x, y + r), new Vector2(x - r, y));
+        }
+        // 12
+        if (nw < iso && ne < iso && sw >= iso && se >= iso)
+        {
+            return (new Vector2(x + r, y), new Vector2(x - r, y));
+        }
+        // 13
+        if (nw < iso && ne < iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x, y - r), new Vector2(x + r, y));
+        }
+        // 14
+        if (nw >= iso && ne >= iso && sw < iso && se >= iso)
+        {
+            return (new Vector2(x - r, y), new Vector2(x, y - r));
+        }
+
+        return null;
+
+
+    }
     /*
      * when slider changes, update the color with new z value
      */
     public void slicePosSliderChange(float val)
     {
-        int dist = (int)(val * 512);
-        setTexture(_slices[0], dist);
+        setTexture(_slices[(int)(val*1000)] );
     }
 
     public void sliceIsoSliderChange(float val)
