@@ -40,10 +40,11 @@ public class quadScript : MonoBehaviour {
 
     }
     /**
- * run across all pixels, generate line segments and draw them
- */
+    * run across all pixels, generate line segments and draw them
+     */
     void MarchingSquares()
     {
+        
         //  gets the mesh object and uses it to create a diagonal line
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>();
         //assume grid of 512 and scale down later
@@ -53,7 +54,8 @@ public class quadScript : MonoBehaviour {
         {
             for (int j = 0; j < dimension; j++)
             {
-                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j), 0.8f);
+                Slice slice = _slices[100];
+                (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j),0.5f, slice);
                 if (line != null)
                 {
                     addVertice(line.Value.Item1, line.Value.Item2 );
@@ -61,6 +63,7 @@ public class quadScript : MonoBehaviour {
             }
         }
         mscript.createMeshGeometry(vertices, indices);
+        print("done");
 
     }
 
@@ -97,7 +100,6 @@ public class quadScript : MonoBehaviour {
         }
         mscript.createMeshGeometry(vertices, indices);
         mscript.toFile("C:/mesh/mesh.obj", vertices, indices); // endre path
-
 
         print("done");
     }
@@ -271,6 +273,25 @@ public class quadScript : MonoBehaviour {
      * assumes ydim = xdim
      * returns float representing color, should be between 0..1
      */
+    float PixelValueFromSlice(int x, int y, Slice slice)
+    {
+        int xdim = slice.sliceInfo.Rows;
+        int ydim = slice.sliceInfo.Columns;
+
+        var texture = new Texture2D(xdim, ydim, TextureFormat.RGB24, false);     // garbage collector will tackle that it is new'ed 
+
+        ushort[] pixels = slice.getPixels();
+        
+        float val = pixelval(new Vector2(x, y), xdim, pixels);
+        float v = (val-_minIntensity) / _maxIntensity;      // maps [_minIntensity,_maxIntensity] to [0,1] , i.e.  _minIntensity to black and _maxIntensity to white
+
+        return v;
+    }
+    /*
+  * return black if (x, y, z) is closer to center
+  * assumes ydim = xdim
+  * returns float representing color, should be between 0..1
+  */
     float PixelValue(int x, int y, int z, int ydim)
     {
         int dx = Math.Abs(x - ydim / 2);
@@ -281,17 +302,18 @@ public class quadScript : MonoBehaviour {
 
         return color;
     }
-
-    private Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso)
+    private Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso, Slice slice)
     {
         //check all adjacent pixels
         int x = (int)currentGrid.x;
         int y = (int)currentGrid.y;
-        int z = 256;
-        float sw = PixelValue(x, y, z, 512);
-        float se = PixelValue(x + 1, y, z, 512);
-        float nw = PixelValue(x, y + 1, z, 512);
-        float ne = PixelValue(x + 1, y + 1, z, 512);
+        if (x >=511 || y >= 511){
+            return null;
+        }
+        float sw = PixelValueFromSlice(x, y, slice);
+        float se = PixelValueFromSlice(x + 1, y, slice);
+        float nw = PixelValueFromSlice(x, y + 1, slice);
+        float ne = PixelValueFromSlice(x + 1, y + 1, slice);
         float r = 0.5f;
 
         // 1
@@ -364,7 +386,7 @@ public class quadScript : MonoBehaviour {
      */
     public void slicePosSliderChange(float val)
     {
-        setTexture(_slices[(int)(val*1000)] );
+        setTexture(_slices[(int)(val*_numSlices)] );
     }
 
     public void sliceIsoSliderChange(float val)
