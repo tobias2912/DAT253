@@ -16,7 +16,6 @@ public class quadScript : MonoBehaviour {
     int _numSlices;
     int _minIntensity;
     int _maxIntensity;
-    int dimension =50;
     int _IndexCounter = 0;
     //int _iso;
     List<Vector3> vertices = new List<Vector3>();
@@ -53,15 +52,15 @@ public class quadScript : MonoBehaviour {
         Slice slice = _slices[1];
         int xdim = slice.sliceInfo.Rows;
         int ydim = slice.sliceInfo.Columns;
-        for (int num_slice=0; num_slice< _numSlices; num_slice++)
+        for (int num_slice=0; num_slice< _numSlices-1; num_slice++)
         {
-            slice = _slices[num_slice];
+            //slice = _slices[num_slice];
             for(int x=0; x<xdim-1; x++)
             {
                 //print('x', x);
                 for (int y = 0; y < ydim-1; y++)
                 {
-                    DoCube(0.8f, x, y, num_slice, slice);
+                    DoCube(0.4f, x, y, num_slice);
                 }
             }
         }
@@ -70,7 +69,7 @@ public class quadScript : MonoBehaviour {
         print("done");
     }
 
-    void DoCube(float iso, int x, int y, int z, Slice slice)
+    void DoCube(float iso, int x, int y, int z)
     {
         Vector3 v0 = new Vector3(x, y, z);
         Vector3 v1 = new Vector3(x + 1, y, z);
@@ -80,12 +79,12 @@ public class quadScript : MonoBehaviour {
         Vector3 v5 = new Vector3(x + 1, y, z+1);
         Vector3 v6 = new Vector3(x, y + 1, z+1);
         Vector3 v7 = new Vector3(x + 1, y + 1, z+1);
-        DoTetra(iso, v4,v6,v0,v7, slice);
-        DoTetra(iso, v6,v0,v7,v2, slice);
-        DoTetra(iso, v0,v7,v2,v3, slice);
-        DoTetra(iso, v4,v5,v7,v0, slice);
-        DoTetra(iso, v1,v7,v0,v3, slice);
-        DoTetra(iso, v0,v5,v7,v1, slice);
+        DoTetra(iso, v4,v6,v0,v7);
+        DoTetra(iso, v6,v0,v7,v2);
+        DoTetra(iso, v0,v7,v2,v3);
+        DoTetra(iso, v4,v5,v7,v0);
+        DoTetra(iso, v1,v7,v0,v3);
+        DoTetra(iso, v0,v5,v7,v1);
     }
     /*
      * find a point between vectors v1 and v2, weighted towards the point 
@@ -98,13 +97,13 @@ public class quadScript : MonoBehaviour {
             return v;
     }
 
-    void DoTetra(float iso, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Slice slice)
+    void DoTetra(float iso, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
         
-        float p1 = PixelValueFromSlice((int)v1.x, (int)v1.y,slice);
-        float p2 = PixelValueFromSlice((int)v2.x,(int) v2.y,slice);
-        float p3 = PixelValueFromSlice((int)v3.x,(int) v3.y,slice);
-        float p4 = PixelValueFromSlice((int)v4.x, (int)v4.y,slice);
+        float p1 = PixelValueFromSlice((int)v1.x, (int)v1.y, (int)v1.z);
+        float p2 = PixelValueFromSlice((int)v2.x,(int) v2.y, (int)v2.z);
+        float p3 = PixelValueFromSlice((int)v3.x,(int) v3.y, (int)v3.z);
+        float p4 = PixelValueFromSlice((int)v4.x, (int)v4.y, (int)v4.z);
 
         Vector3 p12 = interpolate(v1, v2, p1, p2, iso);
         Vector3 p13 = interpolate(v1, v3, p1, p3, iso);
@@ -246,8 +245,9 @@ public class quadScript : MonoBehaviour {
      * get pixel at x, y in a Slice
      * returns float representing color, between 0..1
      */
-    float PixelValueFromSlice(int x, int y, Slice slice)
+    float PixelValueFromSlice(int x, int y, int z)
     {
+        Slice slice = _slices[z];
         int xdim = slice.sliceInfo.Rows;
         int ydim = slice.sliceInfo.Columns;
         ushort[] pixels = slice.getPixels();
