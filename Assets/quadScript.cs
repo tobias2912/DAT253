@@ -58,7 +58,7 @@ public class quadScript : MonoBehaviour {
                 (Vector2, Vector2)? line = GetLineSegment(new Vector2(i, j),0.5f, slice);
                 if (line != null)
                 {
-                    addVertice(line.Value.Item1, line.Value.Item2 );
+                    addLine(line.Value.Item1, line.Value.Item2 );
                 }
             }
         }
@@ -66,8 +66,10 @@ public class quadScript : MonoBehaviour {
         print("done");
 
     }
-
-    void addVertice(Vector2 start, Vector2 stop)
+    /*
+     * add two coordinates to list of vertices and indices
+     */
+    void addLine(Vector2 start, Vector2 stop)
     {
         start = scaleToPixels(start);
         stop = scaleToPixels(stop);
@@ -87,7 +89,6 @@ public class quadScript : MonoBehaviour {
         //  gets the mesh object and uses it to create a diagonal line
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>(); 
         //assume grid of 512 and scale down later
-        //Vector2 currentGrid = new Vector2(200f, 200f); //start at a random point
         for (int x=0; x< dimension; x++)
         {
             for(int y=0; y<dimension; y++)
@@ -100,7 +101,6 @@ public class quadScript : MonoBehaviour {
         }
         mscript.createMeshGeometry(vertices, indices);
         mscript.toFile("C:/mesh/mesh.obj", vertices, indices); // endre path
-
         print("done");
     }
 
@@ -121,21 +121,23 @@ public class quadScript : MonoBehaviour {
         DoTetra(iso, v1,v7,v0,v3);
         DoTetra(iso, v0,v5,v7,v1);
     }
-
+    /*
+     * find a point between vectors v1 and v2, weighted towards the point 
+     * closest to the iso value
+     */
     Vector3 interpolate(Vector3 v1, Vector3 v2, float p1, float p2, float iso)
     {
             float x = ((iso - p1) / (p2 - p1));
             Vector3 v= v1 + x * (v2 - v1);
             return v;
-
     }
 
     void DoTetra(float iso, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
-        float p1 = PixelValue((int)v1.x, (int)v1.y,(int) v1.z, dimension);
-        float p2 = PixelValue((int)v2.x,(int) v2.y,(int) v2.z, dimension);
-        float p3 = PixelValue((int)v3.x,(int) v3.y,(int) v3.z, dimension);
-        float p4 = PixelValue((int)v4.x, (int)v4.y,(int) v4.z, dimension);
+        float p1 = PixelValueFromSphere((int)v1.x, (int)v1.y,(int) v1.z, dimension);
+        float p2 = PixelValueFromSphere((int)v2.x,(int) v2.y,(int) v2.z, dimension);
+        float p3 = PixelValueFromSphere((int)v3.x,(int) v3.y,(int) v3.z, dimension);
+        float p4 = PixelValueFromSphere((int)v4.x, (int)v4.y,(int) v4.z, dimension);
 
         Vector3 p12 = interpolate(v1, v2, p1, p2, iso);
         Vector3 p13 = interpolate(v1, v3, p1, p3, iso);
@@ -144,32 +146,32 @@ public class quadScript : MonoBehaviour {
         Vector3 p24 = interpolate(v2, v4, p2, p4, iso);
         Vector3 p34 = interpolate(v3, v4, p3, p4, iso);
 
-        String isoString = (p1>=iso ? "1" : "0") + (p2>=iso ? "1" : "0") + 
-            (p3>=iso ? "1" : "0") + (p4>=iso ? "1" : "0");
+        int isoString = (p1>=iso ? 1000: 0) + (p2>=iso ? 100 : 0) + 
+            (p3>=iso ? 10 : 0) + (p4>=iso ? 1 : 0);
         switch (isoString)
         {
-            case "0000": case "1111":
+            case 0: case 1111:
                 //do nothing
                 break;
-            case "1110": case "0001":
+            case 1110: case 0001:
                 MakeTriangle(p14, p24, p34);
                 break;
-            case "1101": case "0010":
+            case 1101: case 0010:
                 MakeTriangle(p13, p34, p23);
                 break;
-            case "1011": case "0100":
+            case 1011: case 0100:
                 MakeTriangle(p12, p23, p24);
                 break;
-            case "0111": case "1000":
+            case 0111: case 1000:
                 MakeTriangle(p12, p13, p14);
                 break;
-            case "1100": case "0011":
+            case 1100: case 0011:
                 MakeQuad(p13, p14, p24, p23);
                 break;
-            case "1010": case "0101":
+            case 1010: case 0101:
                 MakeQuad(p12, p23, p34, p14);
                 break;
-            case "1001": case "0110":
+            case 1001: case 0110:
                 MakeQuad(p12, p13, p34, p24);
                 break;
 
@@ -197,7 +199,9 @@ public class quadScript : MonoBehaviour {
         MakeTriangle(p1, p3, p2);
         MakeTriangle(p1, p3, p4);
     }
-
+    /*
+     * change a coordinate so it shows up on screen
+     */
     Vector3 scaleToPixels(Vector3 coor)
     {
         coor.x = (coor.x / 50)-5f;
@@ -264,14 +268,16 @@ public class quadScript : MonoBehaviour {
         texture.Apply();  // Apply all SetPixel calls
         GetComponent<Renderer>().material.mainTexture = texture;
     }
+    /*
+     * get value of pixel in a list of pixels
+     */
     ushort pixelval(Vector2 p, int xdim, ushort[] pixels)
     {
         return pixels[(int)p.x + (int)p.y * xdim];
     }
     /*
-     * return black if (x, y, z) is closer to center
-     * assumes ydim = xdim
-     * returns float representing color, should be between 0..1
+     * get pixel at x, y in a Slice
+     * returns float representing color, between 0..1
      */
     float PixelValueFromSlice(int x, int y, Slice slice)
     {
@@ -292,14 +298,13 @@ public class quadScript : MonoBehaviour {
   * assumes ydim = xdim
   * returns float representing color, should be between 0..1
   */
-    float PixelValue(int x, int y, int z, int ydim)
+    float PixelValueFromSphere(int x, int y, int z, int ydim)
     {
         int dx = Math.Abs(x - ydim / 2);
         int dy = Math.Abs(y - ydim / 2);
         int dz = Math.Abs(z - ydim / 2);
         double distance = Math.Sqrt(dx * dx + dy * dy + dz * dz);
         float color = (float)(distance / ydim * 2.0);
-
         return color;
     }
     private Nullable<(Vector2, Vector2)> GetLineSegment(Vector2 currentGrid, float iso, Slice slice)
